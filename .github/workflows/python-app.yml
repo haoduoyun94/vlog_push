@@ -6,16 +6,16 @@ on:
   pull_request:
     branches: [ "master" ]
   schedule:
-    - cron: '0 0 * * *'  # 每天北京时间8点自动运行（UTC 0点）
+    - cron: '0 0 * * *'  # 每天北京时间8点自动运行
+  workflow_dispatch:  # 新增：允许手动触发
 
 permissions:
   contents: read
 
 jobs:
-  # 第一步：代码检查（失败会提示，但不阻断推送）
   lint-code:
     runs-on: ubuntu-latest
-    continue-on-error: true  # 检查失败也继续执行推送任务
+    continue-on-error: true
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.10
@@ -28,14 +28,11 @@ jobs:
         pip install flake8
     - name: 代码语法检查（flake8）
       run: |
-        # 检查严重错误（语法错误/未定义变量），打印详细信息
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # 其他问题仅作为警告（不阻断）
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-  # 第二步：运行微信推送（无论检查是否失败，都执行）
   send-wechat:
-    needs: lint-code  # 依赖代码检查任务（等检查完成再推送）
+    needs: lint-code
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
